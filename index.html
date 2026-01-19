@@ -276,8 +276,7 @@
     </div>
 
     <script>
-        const API_URL = 'https://winter-dust-43d6.andi060987.workers.dev';
-        const SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbyR9imToOCCsTDFvA52PVkjoHSbLkqipULQ6EUlaKZqWLdKV0BXKyDAh4PtNglu_Ldt/exec';  // ← Ganti dengan URL Apps Script
+        const API_URL = 'https://winter-dust-43d6.andi060987.workers.dev';        
         let currentFilter = 'all';
         let allNews = [];
 
@@ -353,7 +352,7 @@
 
         async function sendTitle(news) {
             try {
-                const response = await fetch(SHEETS_WEBHOOK_URL, {
+                const response = await fetch(`${API_URL}/send-title`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -378,7 +377,7 @@
 
         async function sendContent(news) {
             try {
-                const response = await fetch(SHEETS_WEBHOOK_URL, {
+                const response = await fetch(`${API_URL}/send-content`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -431,3 +430,4 @@
     </script>
 </body>
 </html>
+
