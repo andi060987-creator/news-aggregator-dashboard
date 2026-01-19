@@ -276,158 +276,160 @@
     </div>
 
     <script>
-        const API_URL = 'https://winter-dust-43d6.andi060987.workers.dev';        
-        let currentFilter = 'all';
-        let allNews = [];
+    const API_URL = 'https://winter-dust-43d6.andi060987.workers.dev';
+    let currentFilter = 'all';
+    let allNews = [];
 
-        window.addEventListener('DOMContentLoaded', () => {
-            loadNews();
-        });
+    window.addEventListener('DOMContentLoaded', () => {
+        loadNews();
+    });
 
-        async function loadNews() {
-            try {
-                const response = await fetch(`${API_URL}/news`);
-                const data = await response.json();
-                
-                if (data.status === 'success') {
-                    allNews = data.results;
-                    displayNews(allNews);
-                } else {
-                    showNotification('Gagal memuat berita', 'error');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                showNotification('Error: ' + error.message, 'error');
-            }
-        }
-
-        function displayNews(newsArray) {
-            const newsGrid = document.getElementById('newsGrid');
+    async function loadNews() {
+        try {
+            const response = await fetch(`${API_URL}/news`);
+            const data = await response.json();
             
-            if (newsArray.length === 0) {
-                newsGrid.innerHTML = '<div class="loading">📭 Tidak ada berita</div>';
-                return;
-            }
-
-            newsGrid.innerHTML = newsArray.map(news => `
-                <div class="news-card">
-                    <div class="news-card-content">
-                        <span class="news-category category-${news.category.toLowerCase()}">
-                            ${news.category}
-                        </span>
-                        <h2 class="news-title">${news.title}</h2>
-                        <p class="news-description">${news.description}</p>
-                        <div class="news-meta">
-                            <span>📰 ${news.source}</span>
-                            <span>🕒 ${formatDate(news.publishedAt)}</span>
-                        </div>
-                        <div class="news-actions">
-                            <button class="btn btn-primary" onclick='sendTitle(${JSON.stringify(news)})'>
-                                📌 Pilih Judul
-                            </button>
-                            <button class="btn btn-secondary" onclick='sendContent(${JSON.stringify(news)})'>
-                                📄 Get Content
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function filterNews(category) {
-            currentFilter = category;
-            
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-
-            if (category === 'all') {
+            if (data.status === 'success') {
+                allNews = data.results;
                 displayNews(allNews);
             } else {
-                const filtered = allNews.filter(news => news.category === category);
-                displayNews(filtered);
+                showNotification('Gagal memuat berita', 'error');
             }
+        } catch (error) {
+            console.error('Error:', error);
+            showNotification('Error: ' + error.message, 'error');
+        }
+    }
+
+    function displayNews(newsArray) {
+        const newsGrid = document.getElementById('newsGrid');
+        
+        if (newsArray.length === 0) {
+            newsGrid.innerHTML = '<div class="loading">📭 Tidak ada berita</div>';
+            return;
         }
 
-        async function sendTitle(news) {
-            try {
-                const response = await fetch(`${API_URL}/send-title`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        title: news.title,
-                        source: news.source,
-                        category: news.category
-                    })
-                });
+        newsGrid.innerHTML = newsArray.map(news => `
+            <div class="news-card">
+                <div class="news-card-content">
+                    <span class="news-category category-${news.category.toLowerCase()}">
+                        ${news.category}
+                    </span>
+                    <h2 class="news-title">${news.title}</h2>
+                    <p class="news-description">${news.description}</p>
+                    <div class="news-meta">
+                        <span>📰 ${news.source}</span>
+                        <span>🕒 ${formatDate(news.publishedAt)}</span>
+                    </div>
+                    <div class="news-actions">
+                        <button class="btn btn-primary" onclick='sendTitle(${JSON.stringify(news)})'>
+                            📌 Pilih Judul
+                        </button>
+                        <button class="btn btn-secondary" onclick='sendContent(${JSON.stringify(news)})'>
+                            📄 Get Content
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
 
-                const data = await response.json();
-                
-                if (data.success) {
-                    showNotification('✅ Judul berhasil disimpan!', 'success');
-                } else {
-                    showNotification('❌ Gagal menyimpan judul', 'error');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                showNotification('Error: ' + error.message, 'error');
+    function filterNews(category) {
+        currentFilter = category;
+        
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        event.target.classList.add('active');
+
+        if (category === 'all') {
+            displayNews(allNews);
+        } else {
+            const filtered = allNews.filter(news => news.category === category);
+            displayNews(filtered);
+        }
+    }
+
+    async function sendTitle(news) {
+        try {
+            const response = await fetch(`${API_URL}/send-title`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title: news.title,
+                    content: '',
+                    source: news.source,
+                    category: news.category
+                })
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                showNotification('✅ Judul berhasil disimpan!', 'success');
+            } else {
+                showNotification('❌ ' + data.message, 'error');
             }
+        } catch (error) {
+            console.error('Error:', error);
+            showNotification('❌ Error: ' + error.message, 'error');
         }
+    }
 
-        async function sendContent(news) {
-            try {
-                const response = await fetch(`${API_URL}/send-content`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        title: news.title,
-                        content: news.description,
-                        source: news.source,
-                        category: news.category
-                    })
-                });
+    async function sendContent(news) {
+        try {
+            const response = await fetch(`${API_URL}/send-content`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title: news.title,
+                    content: news.description,
+                    source: news.source,
+                    category: news.category
+                })
+            });
 
-                const data = await response.json();
-                
-                if (data.success) {
-                    showNotification('✅ Content berhasil disimpan!', 'success');
-                } else {
-                    showNotification('❌ Gagal menyimpan content', 'error');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                showNotification('Error: ' + error.message, 'error');
+            const data = await response.json();
+            
+            if (data.success) {
+                showNotification('✅ Content berhasil disimpan!', 'success');
+            } else {
+                showNotification('❌ ' + data.message, 'error');
             }
+        } catch (error) {
+            console.error('Error:', error);
+            showNotification('❌ Error: ' + error.message, 'error');
         }
+    }
 
-        function showNotification(message, type) {
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.textContent = message;
-            document.body.appendChild(notification);
+    function showNotification(message, type) {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
+        document.body.appendChild(notification);
 
-            setTimeout(() => {
-                notification.remove();
-            }, 3000);
-        }
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
 
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            const now = new Date();
-            const diffMs = now - date;
-            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-            
-            if (diffHours < 1) return 'Baru saja';
-            if (diffHours < 24) return `${diffHours} jam lalu`;
-            
-            const diffDays = Math.floor(diffHours / 24);
-            if (diffDays === 1) return 'Kemarin';
-            if (diffDays < 7) return `${diffDays} hari lalu`;
-            
-            return date.toLocaleDateString('id-ID');
-        }
-    </script>
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+        
+        if (diffHours < 1) return 'Baru saja';
+        if (diffHours < 24) return `${diffHours} jam lalu`;
+        
+        const diffDays = Math.floor(diffHours / 24);
+        if (diffDays === 1) return 'Kemarin';
+        if (diffDays < 7) return `${diffDays} hari lalu`;
+        
+        return date.toLocaleDateString('id-ID');
+    }
+</script>
 </body>
 </html>
+
 
